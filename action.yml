@@ -6,6 +6,7 @@ runs:
   using: 'composite'
   steps:
     - name: Install dependencies on Ubuntu
+      shell: bash
       if: runner.os == 'Linux'
       run: |
         sudo apt update
