@@ -1,6 +1,7 @@
 ## nao1215/actions-ebitengine
 
 This action sets up [ebitengine dependencies package](https://ebitengine.org/en/documents/install.html).
+It's only for linux (ubuntu). If you use windows or mac, this action will be skipped.
 
 ### Example usage
 
