@@ -1,0 +1,75 @@
+name: PrepareRelease
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version to draft (vX.Y.Z or X.Y.Z)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  draft:
+    name: Draft release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve release tags
+        id: meta
+        shell: bash
+        env:
+          INPUT_RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          source scripts/release_meta.sh
+          resolve_release_meta "${INPUT_RELEASE_VERSION}"
+          emit_release_meta
+
+      - name: Ensure the release does not already exist
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.release-tag }}
+        run: |
+          git fetch --force --tags origin
+          if git rev-parse -q --verify "refs/tags/${RELEASE_TAG}" >/dev/null; then
+            echo "Tag ${RELEASE_TAG} already exists" >&2
+            exit 1
+          fi
+          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Release ${RELEASE_TAG} already exists" >&2
+            exit 1
+          fi
+
+      - name: Create a draft release with generated notes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.release-tag }}
+        run: |
+          gh release create "${RELEASE_TAG}" \
+            --draft \
+            --generate-notes \
+            --title "${RELEASE_TAG}" \
+            --target "${GITHUB_SHA}"
+
+      - name: Print the Marketplace publish checklist
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ steps.meta.outputs.release-tag }}
+          MAJOR_TAG: ${{ steps.meta.outputs.major-tag }}
+          MINOR_TAG: ${{ steps.meta.outputs.minor-tag }}
+        run: |
+          {
+            echo "## Release prepared"
+            echo
+            echo "- Draft release: ${RELEASE_TAG}"
+            echo "- Moving tags that will be updated on publish: ${MAJOR_TAG}, ${MINOR_TAG}"
+            echo "- Next step: open the draft release, tick \"Publish this Action to the GitHub Marketplace\", then publish it."
+          } >>"${GITHUB_STEP_SUMMARY}"

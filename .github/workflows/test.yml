@@ -1,0 +1,111 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Static checks — these always run.
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run ShellCheck
+        # -x lets ShellCheck follow the sourced install.sh from packages_test.sh.
+        run: shellcheck -x scripts/install.sh scripts/packages_test.sh scripts/release_meta.sh scripts/release_meta_test.sh
+
+      - name: Run actionlint
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+
+      - name: Test package resolution
+        run: bash scripts/packages_test.sh
+
+      - name: Test release tag normalization
+        run: bash scripts/release_meta_test.sh
+
+  # Integration test: install the packages, then build and run a small
+  # Ebitengine game on every supported platform.
+  install:
+    name: Build and run (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Ebitengine
+        id: setup
+        uses: ./
+        with:
+          xvfb: true
+
+      - name: Print resolved outputs
+        shell: bash
+        env:
+          PACKAGES: ${{ steps.setup.outputs.packages }}
+          PACKAGE_MANAGER: ${{ steps.setup.outputs.package-manager }}
+        run: |
+          echo "package-manager=${PACKAGE_MANAGER}"
+          echo "packages=${PACKAGES}"
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache-dependency-path: testdata/smoke/go.sum
+
+      - name: Build the smoke game
+        working-directory: testdata/smoke
+        run: go build -o smoke .
+
+      - name: Run the smoke game headless (Linux)
+        if: runner.os == 'Linux'
+        working-directory: testdata/smoke
+        run: xvfb-run --auto-servernum ./smoke
+
+  # Linux distributions that are not Ubuntu, run in containers.
+  container:
+    name: Build (${{ matrix.image }})
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["debian:stable", "fedora:latest"]
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Ebitengine
+        uses: ./
+        with:
+          xvfb: true
+          extra-packages: tar gzip
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Build and run the smoke game
+        working-directory: testdata/smoke
+        run: |
+          go build -o smoke .
+          xvfb-run --auto-servernum ./smoke
