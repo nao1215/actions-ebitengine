@@ -1,17 +1,10 @@
 # setup-ebitengine
 
-[![GitHub Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-setup--ebitengine-blue?logo=github)](https://github.com/marketplace/actions/setup-ebitengine)
-[![Test](https://github.com/nao1215/setup-ebitengine/actions/workflows/test.yml/badge.svg)](https://github.com/nao1215/setup-ebitengine/actions/workflows/test.yml)
+[![GitHub Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-setup--ebitengine-blue?logo=github)](https://github.com/marketplace/actions/setup-ebitengine) [![Test](https://github.com/nao1215/setup-ebitengine/actions/workflows/test.yml/badge.svg)](https://github.com/nao1215/setup-ebitengine/actions/workflows/test.yml)
 
-GitHub Action to install the system packages [Ebitengine](https://ebitengine.org/)
-needs to build and run games.
+GitHub Action to install the system packages [Ebitengine](https://ebitengine.org/) needs to build and run games.
 
-On Linux it installs the OpenGL, X11 and ALSA development packages listed in the
-[Ebitengine install guide](https://ebitengine.org/en/documents/install.html)
-(apt on Ubuntu / Debian, dnf on Fedora containers), and optionally Xvfb so games
-and tests can run headless. macOS and Windows runners already have everything
-Ebitengine needs, so the action succeeds there without installing anything —
-you can use the same workflow on every OS.
+On Linux it installs the OpenGL, X11 and ALSA development packages listed in the [Ebitengine install guide](https://ebitengine.org/en/documents/install.html) (apt on Ubuntu / Debian, dnf on Fedora containers), and optionally Xvfb so games and tests can run headless. macOS and Windows runners already have everything Ebitengine needs, so the action succeeds there without installing anything — you can use the same workflow on every OS.
 
 ## Quick start
 
@@ -25,8 +18,7 @@ you can use the same workflow on every OS.
 
 ## Run tests headless
 
-Tests that open a window (or call `ebiten.RunGame`) need a display. On Linux,
-install Xvfb and wrap the command with `xvfb-run`:
+Tests that open a window (or call `ebiten.RunGame`) need a display. On Linux, install Xvfb and wrap the command with `xvfb-run`:
 
 ```yaml
 - uses: nao1215/setup-ebitengine@v0
@@ -78,14 +70,11 @@ jobs:
 | macOS (Apple silicon, Intel)             | Nothing to install.                          |
 | Windows                                  | Nothing to install.                          |
 
-The action uses `sudo` when it is not running as root, so it works both on
-GitHub-hosted runners and inside `container:` jobs.
+The action uses `sudo` when it is not running as root, so it works both on GitHub-hosted runners and inside `container:` jobs.
 
 ## Migrating from actions-ebitengine
 
-This repository used to be called `nao1215/actions-ebitengine`. The old name
-keeps working through GitHub's redirect, but new workflows should use
-`nao1215/setup-ebitengine`:
+This repository used to be called `nao1215/actions-ebitengine`. The old name keeps working through GitHub's redirect, but new workflows should use `nao1215/setup-ebitengine`:
 
 ```diff
 -      - uses: nao1215/actions-ebitengine@v0
@@ -100,8 +89,7 @@ When you want to cut a new Marketplace release:
 1. Open the draft GitHub release it creates, tick `Publish this Action to the GitHub Marketplace`, then publish it.
 1. After publish, `SyncReleaseTags` automatically moves the floating `vX` and `vX.Y` tags (for example `v0` and `v0.1`) to that release.
 
-That keeps the Marketplace listing current while preserving the immutable full
-release tag (`v0.1.1`, `v0.1.2`, ...).
+That keeps the Marketplace listing current while preserving the immutable full release tag (`v0.1.1`, `v0.1.2`, ...).
 
 ## License
 
