@@ -84,7 +84,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        image: ["debian:stable", "fedora:latest"]
+        image: ["debian:stable", "ubuntu:22.04", "fedora:latest", "archlinux:latest"]
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     timeout-minutes: 15
@@ -106,6 +106,62 @@ jobs:
 
       - name: Build and run the smoke game
         working-directory: testdata/smoke
+        run: |
+          go build -o smoke .
+          xvfb-run --auto-servernum ./smoke
+
+  # Alpine (musl): Go comes from apk, as actions/setup-go ships glibc builds.
+  alpine:
+    name: Build (alpine:latest)
+    runs-on: ubuntu-latest
+    container: alpine:latest
+    timeout-minutes: 15
+    steps:
+      - name: Install bash, Go and git
+        run: apk add --no-cache bash go git ca-certificates
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Ebitengine
+        uses: ./
+        with:
+          xvfb: true
+
+      - name: Build and run the smoke game
+        working-directory: testdata/smoke
+        env:
+          GOTOOLCHAIN: auto
+        run: |
+          go build -o smoke .
+          xvfb-run ./smoke
+
+  # The dev input: a C compiler and the headers, for cgo builds.
+  dev:
+    name: Build with cgo (ubuntu-latest)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Ebitengine
+        uses: ./
+        with:
+          dev: true
+          xvfb: true
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache-dependency-path: testdata/smoke/go.sum
+
+      - name: Build with cgo and run the smoke game
+        working-directory: testdata/smoke
+        env:
+          CGO_ENABLED: "1"
         run: |
           go build -o smoke .
           xvfb-run --auto-servernum ./smoke

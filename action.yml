@@ -1,5 +1,5 @@
 name: "Setup Ebitengine"
-description: "Install the system packages Ebitengine needs to build and run games (Linux, macOS, Windows / amd64, arm64)."
+description: "Install the system packages Ebitengine needs to run games (Linux, macOS, Windows / amd64, arm64)."
 author: "CHIKAMATSU Naohiro"
 
 branding:
@@ -7,6 +7,10 @@ branding:
   color: "orange"
 
 inputs:
+  dev:
+    description: 'Also install a C compiler and the development headers, for builds with cgo or with Ebitengine before v2.10 (v2.10 and later are pure Go on Linux and need only the runtime libraries). Set to "true" to enable.'
+    required: false
+    default: "false"
   xvfb:
     description: 'Also install Xvfb so games and tests can run headless on Linux (use "xvfb-run go test ./..."). Set to "true" to enable.'
     required: false
@@ -34,6 +38,7 @@ runs:
     - id: install
       shell: bash
       env:
+        INPUT_DEV: ${{ inputs.dev }}
         INPUT_XVFB: ${{ inputs.xvfb }}
         INPUT_EXTRA_PACKAGES: ${{ inputs.extra-packages }}
         INPUT_APT_UPDATE: ${{ inputs.apt-update }}
