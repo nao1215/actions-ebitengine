@@ -1,0 +1,54 @@
+name: SyncReleaseTags
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    name: Sync moving action tags
+    if: github.event.release.prerelease == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve release tags
+        id: meta
+        shell: bash
+        env:
+          INPUT_RELEASE_VERSION: ${{ github.event.release.tag_name }}
+        run: |
+          source scripts/release_meta.sh
+          resolve_release_meta "${INPUT_RELEASE_VERSION}"
+          emit_release_meta
+
+      - name: Move the floating major/minor tags to the published release
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.meta.outputs.release-tag }}
+          MAJOR_TAG: ${{ steps.meta.outputs.major-tag }}
+          MINOR_TAG: ${{ steps.meta.outputs.minor-tag }}
+        run: |
+          git fetch --force --tags origin
+          target_commit="$(git rev-list -n 1 "refs/tags/${RELEASE_TAG}")"
+          [ -n "${target_commit}" ] || {
+            echo "Could not resolve ${RELEASE_TAG} to a commit" >&2
+            exit 1
+          }
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          for tag in "${MAJOR_TAG}" "${MINOR_TAG}"; do
+            git tag -fa "${tag}" -m "Release ${RELEASE_TAG}" "${target_commit}"
+            git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+              "refs/tags/${tag}" --force
+          done
