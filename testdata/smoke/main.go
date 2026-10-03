@@ -33,9 +33,12 @@ func (g *game) Draw(screen *ebiten.Image) {
 
 func (g *game) Layout(int, int) (int, int) { return 320, 240 }
 
+// The audio package is referenced so the platform audio backend (ALSA on Linux) is linked
+// into the build, which checks that its development files were installed. The context is
+// not created: CI machines have no sound device, and opening one fails at run time.
+var _ = audio.NewContext
+
 func main() {
-	// Creating the audio context links the platform audio backend (ALSA on Linux).
-	_ = audio.NewContext(44100)
 	ebiten.SetWindowTitle("setup-ebitengine smoke test")
 	if err := ebiten.RunGame(&game{}); err != nil && !errors.Is(err, ebiten.Termination) {
 		log.Fatal(err)
