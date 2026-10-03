@@ -32,7 +32,7 @@ readonly APK_DEV="build-base pkgconf libx11-dev mesa-dev libxcursor-dev libxi-de
 readonly XBPS_DEV="gcc pkg-config libX11-devel libglvnd-devel libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel alsa-lib-devel"
 
 # Xvfb, to run games and tests headless (input xvfb).
-readonly APT_XVFB="xvfb"
+readonly APT_XVFB="xvfb xauth" # xvfb-run needs xauth, which apt does not pull in without recommends
 readonly DNF_XVFB="xorg-x11-server-Xvfb"
 readonly PACMAN_XVFB="xorg-server-xvfb"
 readonly APK_XVFB="xvfb-run"

@@ -25,10 +25,10 @@ check() {
 }
 
 check "ubuntu default"        Linux apt    false false ""                   apt    "$APT_PACKAGES"
-check "ubuntu with xvfb"      Linux apt    true  false ""                   apt    "$APT_PACKAGES xvfb"
-check "ubuntu xvfb=Yes"       Linux apt    Yes   false ""                   apt    "$APT_PACKAGES xvfb"
+check "ubuntu with xvfb"      Linux apt    true  false ""                   apt    "$APT_PACKAGES xvfb xauth"
+check "ubuntu xvfb=Yes"       Linux apt    Yes   false ""                   apt    "$APT_PACKAGES xvfb xauth"
 check "ubuntu dev"            Linux apt    false true  ""                   apt    "$APT_PACKAGES $APT_DEV"
-check "ubuntu dev and xvfb"   Linux apt    true  true  ""                   apt    "$APT_PACKAGES $APT_DEV xvfb"
+check "ubuntu dev and xvfb"   Linux apt    true  true  ""                   apt    "$APT_PACKAGES $APT_DEV xvfb xauth"
 check "ubuntu extra"          Linux apt    false false "  libfoo   libbar " apt    "$APT_PACKAGES libfoo libbar"
 check "fedora with xvfb"      Linux dnf    true  false ""                   dnf    "$DNF_PACKAGES xorg-x11-server-Xvfb"
 check "fedora dev"            Linux dnf    false true  ""                   dnf    "$DNF_PACKAGES $DNF_DEV"

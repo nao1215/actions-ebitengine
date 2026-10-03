@@ -133,8 +133,9 @@ jobs:
         working-directory: testdata/smoke
         env:
           GOTOOLCHAIN: auto
+        # -buildvcs=false: the checkout belongs to another user inside the container
         run: |
-          go build -o smoke .
+          go build -buildvcs=false -o smoke .
           xvfb-run ./smoke
 
   # The dev input: a C compiler and the headers, for cgo builds.
